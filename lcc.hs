@@ -28,6 +28,9 @@ moveBoat (GameState le ri (Boat MyRight onboard)) = GameState le ri (Boat MyLeft
 
 isLegal:: [Passenger] -> Bool
 isLegal [] = True
+isLegal [Wolf] = True
+isLegal [Corn] = True
+isLegal [Sheep] = True
 isLegal gs = not ((elem Wolf gs) && (elem Sheep gs) && (elem Corn gs) || (elem Wolf gs) && (elem Sheep gs) || (elem Sheep gs) && (elem Corn gs))
 
 strToPassenger:: String -> Passenger
