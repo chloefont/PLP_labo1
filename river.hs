@@ -59,7 +59,7 @@ main = do
 mainLoop:: GameState -> IO()
 mainLoop (GameState [] _ (Boat _ None)) = do putStrLn "Vous avez gagné !"
 mainLoop gs = do
-    putStrLn "'h' pour afficher l'aide.\nVeuillez entrez une commande:"
+    putStrLn "'h' pour afficher l'aide.\nVeuillez entrer une commande:"
     userInput <- getLine
     case userInput of
         'p':_ -> do
