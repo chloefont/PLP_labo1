@@ -74,7 +74,7 @@ mainLoop gs = do
                     (if isLegal (left newState) then newState else gs)
                 else
                     (if isLegal (right newState) then newState else gs)
-            mainLoop $ moveBoat nextGs
+            mainLoop $ nextGs
         'r':_ -> do
             putStrLn "Reinitialisation du jeu..."
             mainLoop initState
