@@ -1,0 +1,9 @@
+{
+    "str": [123, true, null],
+    "chiffres": {
+        "entier": 123,
+        "nombre": 12345,
+        "bool": true,
+        "null": null
+    }
+}
