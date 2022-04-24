@@ -1,9 +1,8 @@
-import Control.Monad (unless)
-import Control.Monad (when)
--- Le loup, la chèvre et les choux (lcc)
+-- Le loup, la chèvre et les choux
 
-data Passenger = Wolf | Sheep | Corn | None
-  deriving (Eq, Show)
+
+data Passenger = Wolf | Sheep | Cabbage | None
+    deriving (Eq, Show)
 
 data Side = MyLeft | MyRight deriving (Eq, Show)
 data Boat = Boat{ side::Side, passenger::Passenger } deriving (Show)
@@ -11,10 +10,11 @@ data GameState = GameState { left :: [Passenger], right :: [Passenger], boat:: B
 
 load:: GameState -> Passenger -> GameState
 load gs None = gs
-load gs@(GameState _ [] (Boat MyRight onboard)) _ = gs
-load gs@(GameState [] _ (Boat MyLeft onboard)) _ = gs
+load gs@(GameState _ [] (Boat MyRight _)) _ = gs
+load gs@(GameState [] _ (Boat MyLeft _)) _ = gs
 load (GameState le ri (Boat MyLeft None)) p = GameState (filter (/= p) le) ri (Boat MyLeft p)
 load (GameState le ri (Boat MyRight None)) p = GameState le (filter (/= p) le) (Boat MyRight p)
+-- quand le bateau est plein on échange les places
 load (GameState le ri (Boat MyLeft onboard)) p = GameState (onboard:(filter (/= p) le)) ri (Boat MyLeft p)
 load (GameState le ri (Boat MyRight onboard)) p = GameState le (onboard:(filter (/= p) ri)) (Boat MyRight p)
 
@@ -30,27 +30,27 @@ moveBoat (GameState le ri (Boat MyRight onboard)) = GameState le ri (Boat MyLeft
 isLegal:: [Passenger] -> Bool
 isLegal [] = True
 isLegal [Wolf] = True
-isLegal [Corn] = True
+isLegal [Cabbage] = True
 isLegal [Sheep] = True
-isLegal gs = not ((elem Wolf gs) && (elem Sheep gs) && (elem Corn gs) || (elem Wolf gs) && (elem Sheep gs) || (elem Sheep gs) && (elem Corn gs))
+isLegal gs = not ((elem Wolf gs) && (elem Sheep gs) && (elem Cabbage gs) || (elem Wolf gs) && (elem Sheep gs) || (elem Sheep gs) && (elem Cabbage gs))
 
 strToPassenger:: String -> Passenger
 strToPassenger "loup" = Wolf
 strToPassenger "chevre" = Sheep
-strToPassenger "choux" = Corn
+strToPassenger "chou" = Cabbage
 strToPassenger _ = None
 
 printHelp :: IO()
 printHelp = do
     putStrLn ":p afficher l'état du jeu\n\
-            \:l <passenger> charger la barque avec un passager\n\
+            \:l <loup|chevre|chou> charger la barque avec un passager\n\
             \:u décharger la barque\n\
             \:m déplacer la barque\n\
             \:r réinitialiser le jeu\n\
             \:q quitter le jeu\n\
             \:h afficher l'aide"
 
-initState = GameState [Wolf, Sheep, Corn] [] (Boat MyLeft None)
+initState = GameState [Wolf, Sheep, Cabbage] [] (Boat MyLeft None)
 
 main:: IO()
 main = do
@@ -78,7 +78,7 @@ mainLoop gs = do
                     if isLegal (right newState) then newState else gs
             mainLoop nextGs
         'r':_ -> do
-            putStrLn "Reinitialisation du jeu..."
+            putStrLn "Reinitialisation du jeu...\n\n"
             mainLoop initState
         'h':_ -> do
             printHelp
