@@ -1,4 +1,5 @@
 import Control.Monad (unless)
+import Control.Monad (when)
 -- Le loup, la chèvre et les choux (lcc)
 
 data Passenger = Wolf | Sheep | Corn | None
@@ -57,32 +58,38 @@ main = do
 
 mainLoop:: GameState -> IO()
 mainLoop gs = do
-    putStrLn "'h' pour afficher l'aide.\nVeuillez entrez une commande:"
-    userInput <- getLine
-    case userInput of
-        'p':_ -> do
-            putStrLn $ show gs
-            mainLoop gs
-        'l':' ':arg -> do
-            putStrLn arg
-            mainLoop $ load gs $ strToPassenger arg
-        'u':_ -> do
-            mainLoop $ unload gs
-        'm':_ -> do
-            let newState = moveBoat gs
-            let nextGs = if side(boat(gs)) == MyLeft then
-                    (if isLegal (left newState) then newState else gs)
-                else
-                    (if isLegal (right newState) then newState else gs)
-            mainLoop $ nextGs
-        'r':_ -> do
-            putStrLn "Reinitialisation du jeu..."
-            mainLoop initState
-        'h':_ -> do
-            printHelp
-            mainLoop gs
-        'q':_ -> do
-            putStrLn "Au revoir !"
-        _ -> do
-            putStrLn "Commande inconnue"
-            mainLoop gs
+    if left(gs) == [] && passenger(boat(gs)) == None then
+        do
+            putStrLn "Vous avez gagné !"
+            return ()
+    else
+        do
+        putStrLn "'h' pour afficher l'aide.\nVeuillez entrez une commande:"
+        userInput <- getLine
+        case userInput of
+            'p':_ -> do
+                putStrLn $ show gs
+                mainLoop gs
+            'l':' ':arg -> do
+                putStrLn arg
+                mainLoop $ load gs $ strToPassenger arg
+            'u':_ -> do
+                mainLoop $ unload gs
+            'm':_ -> do
+                let newState = moveBoat gs
+                let nextGs = if side(boat(gs)) == MyLeft then
+                        (if isLegal (left newState) then newState else gs)
+                    else
+                        (if isLegal (right newState) then newState else gs)
+                mainLoop $ nextGs
+            'r':_ -> do
+                putStrLn "Reinitialisation du jeu..."
+                mainLoop initState
+            'h':_ -> do
+                printHelp
+                mainLoop gs
+            'q':_ -> do
+                putStrLn "Au revoir !"
+            _ -> do
+                putStrLn "Commande inconnue"
+                mainLoop gs
