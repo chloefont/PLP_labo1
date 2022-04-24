@@ -16,7 +16,7 @@ load gs@(GameState [] _ (Boat MyLeft onboard)) _ = gs
 load (GameState le ri (Boat MyLeft None)) p = GameState (filter (/= p) le) ri (Boat MyLeft p)
 load (GameState le ri (Boat MyRight None)) p = GameState le (filter (/= p) le) (Boat MyRight p)
 load (GameState le ri (Boat MyLeft onboard)) p = GameState (onboard:(filter (/= p) le)) ri (Boat MyLeft p)
-load (GameState le ri (Boat MyRight onboard)) p = GameState le (onboard:(filter (/= p) le)) (Boat MyRight p)
+load (GameState le ri (Boat MyRight onboard)) p = GameState le (onboard:(filter (/= p) ri)) (Boat MyRight p)
 
 unload:: GameState -> GameState
 unload gs@(GameState le ri (Boat side None)) = gs
@@ -57,39 +57,34 @@ main = do
     mainLoop initState
 
 mainLoop:: GameState -> IO()
+mainLoop (GameState [] _ (Boat _ None)) = do putStrLn "Vous avez gagné !"
 mainLoop gs = do
-    if left(gs) == [] && passenger(boat(gs)) == None then
-        do
-            putStrLn "Vous avez gagné !"
-            return ()
-    else
-        do
-        putStrLn "'h' pour afficher l'aide.\nVeuillez entrez une commande:"
-        userInput <- getLine
-        case userInput of
-            'p':_ -> do
-                putStrLn $ show gs
-                mainLoop gs
-            'l':' ':arg -> do
-                putStrLn arg
-                mainLoop $ load gs $ strToPassenger arg
-            'u':_ -> do
-                mainLoop $ unload gs
-            'm':_ -> do
-                let newState = moveBoat gs
-                let nextGs = if side(boat(gs)) == MyLeft then
-                        (if isLegal (left newState) then newState else gs)
-                    else
-                        (if isLegal (right newState) then newState else gs)
-                mainLoop $ nextGs
-            'r':_ -> do
-                putStrLn "Reinitialisation du jeu..."
-                mainLoop initState
-            'h':_ -> do
-                printHelp
-                mainLoop gs
-            'q':_ -> do
-                putStrLn "Au revoir !"
-            _ -> do
-                putStrLn "Commande inconnue"
-                mainLoop gs
+    putStrLn "'h' pour afficher l'aide.\nVeuillez entrez une commande:"
+    userInput <- getLine
+    case userInput of
+        'p':_ -> do
+            putStrLn $ show gs
+            mainLoop gs
+        'l':' ':arg -> do
+            putStrLn arg
+            mainLoop $ load gs $ strToPassenger arg
+        'u':_ -> do
+            mainLoop $ unload gs
+        'm':_ -> do
+            let newState = moveBoat gs
+            let nextGs = if side(boat(gs)) == MyLeft then
+                    if isLegal (left newState) then newState else gs
+                else
+                    if isLegal (right newState) then newState else gs
+            mainLoop nextGs
+        'r':_ -> do
+            putStrLn "Reinitialisation du jeu..."
+            mainLoop initState
+        'h':_ -> do
+            printHelp
+            mainLoop gs
+        'q':_ -> do
+            putStrLn "Au revoir !"
+        _ -> do
+            putStrLn "Commande inconnue"
+            mainLoop gs
