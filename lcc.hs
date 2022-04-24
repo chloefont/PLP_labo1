@@ -28,7 +28,13 @@ moveBoat (GameState le ri (Boat MyRight onboard)) = GameState le ri (Boat MyLeft
 
 isLegal:: [Passenger] -> Bool
 isLegal [] = True
+isLegal gs = not ((elem Wolf gs) && (elem Sheep gs) && (elem Corn gs) || (elem Wolf gs) && (elem Sheep gs) || (elem Sheep gs) && (elem Corn gs))
 
+strToPassenger:: String -> Passenger
+strToPassenger "loup" = Wolf
+strToPassenger "chevre" = Sheep
+strToPassenger "choux" = Corn
+strToPassenger _ = None
 
 printHelp :: IO()
 printHelp = do
@@ -40,21 +46,40 @@ printHelp = do
             \:q quitter le jeu\n\
             \:h afficher l'aide"
 
+initState = GameState [Wolf, Sheep, Corn] [] (Boat MyLeft None)
 
 main:: IO()
 main = do
-    putStrLn "'h' pour afficher l'aide"
-    mainLoop
+    mainLoop initState
 
-mainLoop:: IO()
-mainLoop = do
-    userInput <- getChar
-    _ <- getChar
+mainLoop:: GameState -> IO()
+mainLoop gs = do
+    putStrLn "'h' pour afficher l'aide.\nVeuillez entrez une commande:"
+    userInput <- getLine
     case userInput of
-        'h' -> do
+        'p':_ -> do
+            putStrLn $ show gs
+            mainLoop gs
+        'l':' ':arg -> do
+            putStrLn arg
+            mainLoop $ load gs $ strToPassenger arg
+        'u':_ -> do
+            mainLoop $ unload gs
+        'm':_ -> do
+            let newState = moveBoat gs
+            let nextGs = if side(boat(gs)) == MyLeft then
+                    (if isLegal (left newState) then newState else gs)
+                else
+                    (if isLegal (right newState) then newState else gs)
+            mainLoop $ moveBoat nextGs
+        'r':_ -> do
+            putStrLn "Reinitialisation du jeu..."
+            mainLoop initState
+        'h':_ -> do
             printHelp
-        'q' -> do
+            mainLoop gs
+        'q':_ -> do
             putStrLn "Au revoir !"
         _ -> do
             putStrLn "Commande inconnue"
-    unless (userInput == 'q') mainLoop
+            mainLoop gs
