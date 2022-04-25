@@ -1,4 +1,5 @@
 import Control.Exception
+import Data.Maybe
 
 data NotConvertable = NotRomanNumber | NotArabicNumber | NumberTooBig
   deriving (Show)
@@ -41,26 +42,26 @@ dictRoman x = case x of
 romanToNumber :: [Char] -> Int
 romanToNumber ls = if length (takeWhile (== 'M') ls) >= 4 then throw NumberTooBig else romanToNumber' ls
 
-romanToNumber' :: Num a => [Char] -> a
+romanToNumber' :: [Char] -> Int
 romanToNumber' [] = 0
-romanToNumber' [l] = dictNumber [l]
-romanToNumber' (l1 : l2 : ls) = if dictNumber [l1, l2] /= 0 then dictNumber [l1, l2] + romanToNumber' ls else dictNumber [l1] + romanToNumber' (l2 : ls)
+romanToNumber' [l] = fromJust (dictNumber [l])
+romanToNumber' (l1 : l2 : ls) = if isJust (dictNumber [l1, l2]) then fromJust (dictNumber [l1, l2]) + romanToNumber' ls else fromJust(dictNumber [l1]) + romanToNumber' (l2 : ls)
 
 --- TODO lever exception si autre caractère
-dictNumber :: Num p => [Char] -> p
+dictNumber :: Num p => [Char] -> Maybe p
 dictNumber x = case x of
-  "0" -> 0
-  "I" -> 1
-  "IV" -> 4
-  "V" -> 5
-  "IX" -> 9
-  "X" -> 10
-  "XL" -> 40
-  "L" -> 50
-  "XC" -> 90
-  "C" -> 100
-  "CD" -> 400
-  "D" -> 500
-  "CM" -> 900
-  "M" -> 1000
-  _ -> 0
+  "0" -> Just 0
+  "I" -> Just 1
+  "IV" -> Just 4
+  "V" -> Just 5
+  "IX" -> Just 9
+  "X" -> Just 10
+  "XL" -> Just 40
+  "L" -> Just 50
+  "XC" -> Just 90
+  "C" -> Just 100
+  "CD" -> Just 400
+  "D" -> Just 500
+  "CM" -> Just 900
+  "M" -> Just 1000
+  _ -> Nothing
