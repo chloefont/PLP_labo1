@@ -28,34 +28,44 @@ isSpecial c = elem c "':,"
 
 data Token = JObject [Token] | JNumber Int | JString String | JBool Bool | JNull | JArray [Token] | JSpecial String | JError String
     deriving (Show)
-lexer [] = []
+lexer :: String -> ([Token], String)
+lexer [] = ([], "")
 lexer (c:cs)
-    | isSpace c = lexer cs
-    | '[' == c = onArray cs
-    | '"' == c = onString cs
-    | '\'' == c = onString2 cs
-    | '{' == c = onObject cs
-    | isSpecial c = token JSpecial isSpecial (c:cs)
-    | isAlpha c = onAlpha (c:cs)
-    | isDigit c = onDigit (c:cs)
-    | otherwise = JError(show (c:cs)) : []
+    | isSpace c = (fst (lexer cs), "")
+    | '[' == c = (onArray cs, "")
+    | '"' == c = (onString cs, "")
+    | '\'' == c = (onString2 cs,"")
+    | '{' == c = (onObject cs, "")
+    | isSpecial c = (token JSpecial isSpecial (c:cs), "")
+    | isAlpha c = (onAlpha (c:cs),"")
+    | isDigit c = (onDigit (c:cs), "")
+    | '}' == c = ([], (cs))
+    | ']' == c = ([], (cs))
+    | otherwise = (JError(show (c:cs)) : [], "")
 
-token constructor filter cs = constructor token:lexer rest
+token constructor filter cs = constructor token: fst (lexer rest)
     where (token, rest) = span filter cs
 
-onString2 cs = JString (token) : lexer rest
+onString2 cs = JString (token) : fst (lexer rest)
     where (token, (r:rest)) = span (/= '\'') cs
 
-onString cs = JString (token) : lexer rest
+onString cs = JString (token) : fst (lexer rest)
     where (token, (r:rest)) = span (/= '"') cs
 
-onArray cs = JArray (lexer token) : lexer rest
-    where (token, (r:rest)) = span (/=']') cs
+onArray cs = 
+    let 
+        (value, other) = lexer cs
+    in
+        JArray (value) : fst (lexer other)
 
-onObject cs = JObject (lexer token) : lexer rest
-    where (token, (r:rest)) = span (/='}') cs
-    
-onDigit cs = JNumber (read token :: Int):lexer rest
+onObject cs = 
+    let
+        (value, other) = lexer cs
+    in
+        JObject (value) : fst (lexer other)
+        
+
+onDigit cs = JNumber (read token :: Int): fst (lexer rest)
     where (token, rest) = span isDigit cs
 
 onAlpha cs =
@@ -65,7 +75,7 @@ onAlpha cs =
             | os == "false" = JBool False
             | os == "null" = JNull
     in
-        onAlpha' token : lexer rest
+        onAlpha' token :  fst (lexer rest)
     where (token, rest) = span isAlpha cs
     
 
