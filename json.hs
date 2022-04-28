@@ -1,3 +1,8 @@
+{-
+Labo 1 - Exercice 2.4
+Auteurs : Luca Coduri & Chloé Fontaine
+-}
+
 import Data.Char
 import System.Environment
 import Control.Exception

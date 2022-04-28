@@ -1,4 +1,31 @@
+{-
+Labo 1 - Exercice 2.3
+Auteurs : Luca Coduri & Chloé Fontaine
+-}
 
+module Natural (
+    Nat,
+    equ,
+    notEqu,
+    le,
+    leq,
+    be,
+    beq,
+    add,
+    sub,
+    mult,
+    pow,
+    convertNatToInt,
+    convertIntToNat,
+    convertNatToString,
+    zero,
+    Natural.succ,
+    Natural.pred,
+    Natural.isZero
+)
+where
+    
+-- Z = Zero et S = Succ
 data Nat =
     Z
     | S Nat
@@ -73,7 +100,6 @@ convertNatToString :: Nat -> String
 convertNatToString = show
 
 -- Functions
--- TODO vérifier si c'est juste
 zero :: Nat
 zero = Z
 

@@ -1,4 +1,7 @@
--- Le loup, la chèvre et les choux
+{-
+Labo 1 - Exercice 2.5
+Auteurs : Luca Coduri & Chloé Fontaine
+-}
 
 
 data Passenger = Wolf | Sheep | Cabbage | None
