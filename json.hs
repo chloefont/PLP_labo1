@@ -1,9 +1,11 @@
 import Data.Char
+import Data.List
 import System.Environment
 import Control.Exception
 
 
--- testInput = "{ " ++ '"':"str" ++ '"' : ": [ 123, true, null ] }"
+-- Le code commenté est ce que j'avais fais au début mais n'étant pas sûr qu'il fallait faire ça, j'ai recommencé.
+-- J'éspère ne pas être pénalisé si j'ai fais plus de travail que je devais.
 
 -- isQuot :: Char -> Bool
 -- isQuot c = c == '"'
@@ -28,20 +30,26 @@ data JsonException = WrongFileFormat String
 instance Exception JsonException
 
 
-data Token = JKeyValue (Token, Token) | JObject [Token] | JArray [Token] | JNumber Int | JString String | JBool Bool | JNull | JSpecial String | JError String
+data Token = JKeyValue (Token, Token) | JObject [Token] | JArray [Token] | JNumber Int | JString String | JBool Bool | JNull | JSpecial String
 
 
 instance Show Token where
     show (JNumber x) = show x
     show (JString s) = show s
     show (JBool b) = show b
-    show JNull = show "null"
+    show JNull = "null"
     show (JSpecial s) = show s
     show (JKeyValue (key, value)) = show key ++ ": " ++ show value
-    show (JObject ts) = (foldl (\acc x -> acc ++ (show x) ++ ", ") "{" ts) ++ "}"
+    show (JObject ts) = "{" ++ (intercalate ", " (map show ts)) ++ "}"
     show (JArray ts) = show ts
 
-lexer :: String -> [Token]
+{-
+    Analyse lexical d'un json
+    Arguments:
+        1. correspond au json à analyser
+    Retourne soit un JArray soit un JObject
+-} 
+lexer :: String -> Token
 lexer cs =
     let
         -- permet de créer les clés valeurs (JKeyValue)
@@ -53,19 +61,26 @@ lexer cs =
         f (a:(JSpecial _):(JArray c):xs) = (JKeyValue (a,JArray(f c))):(f xs)
         f (a:(JSpecial _):c:xs) = (JKeyValue (a,c)):(f xs)
         f (a:xs) = a:(f xs)
+        -- retirer le premier et dernier caractère ({} ou [])
+        (c:ns) = (init cs)
     in
-        f (lexer' cs)
+        if c == '{' then JObject (f (lexer' ns)) else JArray (f (lexer' ns))
 
--- Analyse lexical d'un json
+{-
+    Analyse lexical d'un json
+    Arguments:
+        1. correspond au json à analyser
+    Retourne une liste de tokens
+-} 
 lexer' :: String -> [Token]
 lexer' [] = []
 lexer' (c:cs)
     | isSpace c = (lexer' cs)
     | ',' == c = (lexer' cs)
-    | '[' == c = (arrayToken JArray (/=']') cs)
-    | '"' == c = (token JString (/='"') cs)
-    | '\'' == c = (token JString (/='\'') cs)
-    | '{' == c = (arrayToken JObject (/='}') cs)
+    | '[' == c = (arrayToken' JArray '[' ']' cs)
+    | '"' == c = (stringToken (/='"') cs)
+    | '\'' == c = (stringToken (/='\'') cs)
+    | '{' == c = (arrayToken' JObject '{' '}' cs)
     | ':' == c = (JSpecial ":") : lexer' cs 
     | isAlpha c = (onAlpha (c:cs))
     | isDigit c = (onDigit (c:cs))
@@ -73,23 +88,67 @@ lexer' (c:cs)
     | ']' == c = []
     | otherwise = throw (WrongFileFormat ("on: " ++ [c]))
 
-
-token constructor filter cs = constructor (token) : (lexer' rest)
+{-
+    Permet de capturer une chaine de caractère
+    Arguments:
+        1. filtre avec caractère qui délimite une chaine
+        2. correspond au json à analyser
+    Retourne une liste de tokens
+-} 
+stringToken filter cs = JString (token) : (lexer' rest)
     where (token, (r:rest)) = span filter cs
 
--- Construction des objets ou tableau
-arrayToken constructor filter cs = 
-    let 
-        (_, (_:rest)) = span filter cs
-        value = lexer' cs
+{-
+    Permet de capturer un objet ou un tableau
+    Arguments:
+        1. json à analyser
+        2. caractère ouvrant
+        3. caractère fermant
+    Retourne un tuple contenant le contenu de l'objet ainsi que le reste du json
+-} 
+ponctuationFilter :: String -> Char -> Char -> (String, String)
+ponctuationFilter cs openChar closeChar = 
+    let
+        ponctuationFilter' :: String -> String -> Int -> (String, String)
+        ponctuationFilter' (c:cs) k n 
+            | c == closeChar && n == 0 = (k, cs)
+            | c == closeChar = ponctuationFilter' cs (k++[c]) (n-1)
+            | c == openChar  = ponctuationFilter' cs (k++[c]) (n+1)
+            | otherwise      = ponctuationFilter' cs (k++[c]) n
     in
-        (constructor value) : (lexer' rest)
+        ponctuationFilter' cs "" 0
 
--- Conversion des nombres en Int
+
+{-
+    Permet de construire un objet ou un tableau
+    Arguments:
+        1. le type de token (JObject ou JArray)
+        2. caractère ouvrant
+        3. caractère fermant
+        4. json à analyser
+    Retourne une liste de token
+-} 
+arrayToken' constructor openChar closeChar cs = 
+    let 
+        (keep, rest) = ponctuationFilter cs openChar closeChar
+    in
+        (constructor (lexer' keep)) : (lexer' rest)
+
+{-
+    Permet de parser un string en nombre dans un JNumber
+    Arguments:
+        1. json à analyser
+    Retourne une liste de token
+-} 
 onDigit cs = JNumber (read token :: Int): (lexer' rest)
     where (token, rest) = span isDigit cs
 
--- Check des bool et null
+{-
+    Permet de parser un null ou un bool
+    Arguments:
+        1. json à analyser
+    Retourne une liste de token
+-} 
 onAlpha cs =
     let
         onAlpha' os
