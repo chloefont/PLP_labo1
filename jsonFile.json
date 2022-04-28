@@ -1,5 +1,7 @@
 {
+    "coucou": "mdr",
     "str": [123, true, [null, 2]],
+
     "chiffres": {
         "entier": 123,
         "nombre": 12345,
