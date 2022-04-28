@@ -1,5 +1,6 @@
 import Control.Exception
 import Data.Maybe
+import GHC.IO.Exception (IOErrorType (IllegalOperation))
 
 data NotConvertable = NotRomanNumber | NotArabicNumber | NumberTooBig
   deriving (Show)
@@ -40,14 +41,21 @@ dictRoman x = case x of
   _ -> throw NotRomanNumber
 
 romanToNumber :: [Char] -> Int
-romanToNumber ls = if length (takeWhile (== 'M') ls) >= 4 then throw NumberTooBig else romanToNumber' ls
+romanToNumber ls = if length (takeWhile (== 'M') ls) >= 4 then throw NumberTooBig else romanToNumber' 1000 ls
 
-romanToNumber' :: [Char] -> Int
-romanToNumber' [] = 0
-romanToNumber' [l] = fromJust (dictNumber [l])
-romanToNumber' (l1 : l2 : ls) = if isJust (dictNumber [l1, l2]) then fromJust (dictNumber [l1, l2]) + romanToNumber' ls else fromJust(dictNumber [l1]) + romanToNumber' (l2 : ls)
+romanToNumber' :: Int -> [Char] -> Int
+romanToNumber' _ [] = 0
+romanToNumber' lastNb (l1 : ls) =
+  let sameNb = takeWhile (== l1) ls
+      maxNb = if l1 == 'L' then 1 else 3
+   in if length sameNb >= maxNb
+        then throw NotRomanNumber
+        else if not (null ls) && isJust (dictNumber [l1, head ls]) then addToTotal (fromJust (dictNumber [l1, head ls])) (tail ls) else addToTotal (fromJust (dictNumber [l1])) ls
+  where
+    addToTotal :: Int -> [Char] -> Int
+    addToTotal nb next =
+      if lastNb < nb then throw NotRomanNumber else nb + romanToNumber' nb next
 
---- TODO lever exception si autre caractère
 dictNumber :: Num p => [Char] -> Maybe p
 dictNumber x = case x of
   "0" -> Just 0
