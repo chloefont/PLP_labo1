@@ -1,6 +1,8 @@
 {-
 Labo 1 - Exercice 2.1
 Auteurs : Luca Coduri & Chloé Fontaine
+
+Module offrant des fonctions de conversion de nombre en nombre romain et inversement.
 -}
 
 module Roman (
