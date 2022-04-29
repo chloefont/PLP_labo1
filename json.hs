@@ -61,7 +61,7 @@ lexer cs =
         f:: [Token] -> [Token]
         f [] = []
         f ((JObject a):xs) = JObject (f a): (f xs) 
-        f ((JArray a):xs) = JObject (f a): (f xs) 
+        f ((JArray a):xs) = JArray (f a): (f xs) 
         f (a:(JSpecial _):(JObject c):xs) = (JKeyValue (a,JObject(f c))):(f xs)
         f (a:(JSpecial _):(JArray c):xs) = (JKeyValue (a,JArray(f c))):(f xs)
         f (a:(JSpecial _):c:xs) = (JKeyValue (a,c)):(f xs)
