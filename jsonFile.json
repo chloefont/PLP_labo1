@@ -3,5 +3,5 @@
     "str": "lol",
     "chiffres": { "entier": 123, "test": { "test2": "test" } },
     "autre": { "entier": 123, "entier2": 123, "entier3": 123, "entier4": 123 },
-    "frite": "salut"
+    "frite": [["mdr", "lol]"], ["2"]]
 }

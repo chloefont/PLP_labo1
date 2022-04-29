@@ -114,14 +114,16 @@ stringToken filter cs = JString (token) : (lexer' rest)
 ponctuationFilter :: String -> Char -> Char -> (String, String)
 ponctuationFilter cs openChar closeChar = 
     let
-        ponctuationFilter' :: String -> String -> Int -> (String, String)
-        ponctuationFilter' (c:cs) k n 
+        ponctuationFilter' :: String -> String -> Int -> Bool -> (String, String)
+        ponctuationFilter' (c:cs) k n b
+            | c == '"' = ponctuationFilter' cs (k++[c]) n (not b)
+            | b == True = ponctuationFilter' cs (k++[c]) n b
             | c == closeChar && n == 0 = (k, cs)
-            | c == closeChar = ponctuationFilter' cs (k++[c]) (n-1)
-            | c == openChar  = ponctuationFilter' cs (k++[c]) (n+1)
-            | otherwise      = ponctuationFilter' cs (k++[c]) n
+            | c == closeChar = ponctuationFilter' cs (k++[c]) (n-1) b
+            | c == openChar  = ponctuationFilter' cs (k++[c]) (n+1) b
+            | otherwise      = ponctuationFilter' cs (k++[c]) n b
     in
-        ponctuationFilter' cs "" 0
+        ponctuationFilter' cs "" 0 False
 
 
 {-
