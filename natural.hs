@@ -24,14 +24,11 @@ module Natural (
     Natural.isZero
 )
 where
-    
+
 -- Z = Zero et S = Succ
 data Nat =
     Z
     | S Nat
-
-ex = S(S(S(Z)))
-ex2 = S(S(Z))
 
 instance Show Nat where
     show Z = "Z"
@@ -104,11 +101,12 @@ zero :: Nat
 zero = Z
 
 succ :: Nat -> Nat
-succ Z = Z
-succ (S n) = n
+succ Z = S Z
+succ n = S n
 
 pred :: Nat -> Nat
-pred = S
+pred Z = Z
+pred (S n) = n
 
 isZero :: Nat -> Bool
 isZero n = equ n Z

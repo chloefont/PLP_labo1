@@ -23,8 +23,8 @@ load gs@(GameState [] _ (Boat MyLeft _)) _ = gs
 load (GameState le ri (Boat MyLeft None)) p = GameState (filter (/= p) le) ri (Boat MyLeft p)
 load (GameState le ri (Boat MyRight None)) p = GameState le (filter (/= p) le) (Boat MyRight p)
 -- Quand le bateau est plein on échange les places.
-load (GameState le ri (Boat MyLeft onboard)) p = GameState (onboard:(filter (/= p) le)) ri (Boat MyLeft p)
-load (GameState le ri (Boat MyRight onboard)) p = GameState le (onboard:(filter (/= p) ri)) (Boat MyRight p)
+load (GameState le ri (Boat MyLeft onboard)) p = GameState (onboard:filter (/= p) le) ri (Boat MyLeft p)
+load (GameState le ri (Boat MyRight onboard)) p = GameState le (onboard:filter (/= p) ri) (Boat MyRight p)
 
 -- Décharger le bateau.
 unload:: GameState -> GameState
@@ -43,7 +43,7 @@ isLegal [] = True
 isLegal [Wolf] = True
 isLegal [Cabbage] = True
 isLegal [Sheep] = True
-isLegal gs = not ((elem Wolf gs) && (elem Sheep gs) && (elem Cabbage gs) || (elem Wolf gs) && (elem Sheep gs) || (elem Sheep gs) && (elem Cabbage gs))
+isLegal gs = not (elem Wolf gs && elem Sheep gs && elem Cabbage gs || elem Wolf gs && elem Sheep gs || elem Sheep gs && elem Cabbage gs)
 
 -- Converti une string en passenger.
 strToPassenger:: String -> Passenger
@@ -82,7 +82,7 @@ mainLoop gs = do
     userInput <- getLine
     case userInput of
         'p':_ -> do
-            putStrLn $ show gs
+            print gs
             mainLoop gs
         'l':' ':arg -> do
             putStrLn arg
@@ -91,10 +91,11 @@ mainLoop gs = do
             mainLoop $ unload gs
         'm':_ -> do
             let newState = moveBoat gs
-            let nextGs = if side(boat(gs)) == MyLeft then
+            let nextGs
+                  | side(boat gs) == MyLeft =
                     if isLegal (left newState) then newState else gs
-                else
-                    if isLegal (right newState) then newState else gs
+                            | isLegal (right newState) = newState
+                            | otherwise = gs
             mainLoop nextGs
         'r':_ -> do
             putStrLn "Reinitialisation du jeu...\n\n"
